@@ -11,7 +11,7 @@ Propiedades de los Espacios Metricos
 7. Compleción:Un espacio métrico se dice completo si toda sucesión de Cauchy converge en el espacio.
 8. Unicidad de límites:Si una secuencia de puntos converge a dos límites distintos, entonces esos límites deben ser iguales.
 
-Implemetación en 2D
+Implementación en 2D
 ...
-Implemetación en 3D
+Implementación en 3D
 ...
