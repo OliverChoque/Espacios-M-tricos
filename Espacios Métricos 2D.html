@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Representación 2D de Espacios Métricos</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #062745; /* Cambiar el fondo a un color claro */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            flex-direction: column;
+        }
+        .container {
+            background-color: white; /* Fondo blanco para el contenedor */
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            position: relative; /* Agregado */
+            left: -185px;
+        }
+        h1 {
+            font-size: 2rem;
+            font-weight: bold;
+            background-image: linear-gradient(45deg, #ff0066, #ffcc00, #00ccff, #33cc33);
+            background-size: 400%;
+            -webkit-background-clip: text;
+            color: transparent;
+            animation: gradient 5s infinite;
+        }
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        canvas {
+            border: 2px solid #333;
+            display: block;
+            margin: 20px auto;
+        }
+        .coordinate-input {
+            width: 80px;
+            display: inline-block;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .properties {
+            position: absolute;
+            top: 0;
+            left: calc(100% + 20px); /* Posicionamiento a la derecha del contenedor */
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            display: none; /* Inicialmente oculto */
+            align-items: center;
+            width: 350px; /* Ajustar el ancho */
+            height: 777px; /* Ajustar la altura */
+        }
+        .container.show-properties .properties {
+            left: calc(100% + 20px); /* Mover las propiedades al lado derecho del contenedor */
+            display: block; /* Mostrar cuando la clase show-properties está presente en el contenedor */
+        }
+        .properties ol {
+            margin: 0; /* Agregado */
+            padding-left: 20px; /* Agregado */
+            text-align: left; /* Agregado */
+        }
+        .properties li {
+            font-size: 14px; /* Tamaño de fuente más pequeño */
+        }
+    </style>
+</head>
+<body>
+    <div class="container text-center">
+        <h1>Representación 2D de Espacios Métricos</h1>
+        <canvas id="myCanvas" width="500" height="500" class="my-4"></canvas>
+        <div class="form-group">
+            <label for="punto1">Coordenadas Punto 1 (x, y):</label>
+            <input type="text" id="punto1" class="form-control coordinate-input" placeholder="x1, y1" readonly>
+        </div>
+        <div class="form-group">
+            <label for="punto2">Coordenadas Punto 2 (x, y):</label>
+            <input type="text" id="punto2" class="form-control coordinate-input" placeholder="x2, y2" readonly>
+        </div>
+        <button onclick="calcularDistancia()" class="btn btn-primary">Calcular Distancia</button>
+        <button onclick="mostrarPropiedades()" class="btn btn-success">Mostrar Propiedades</button> <!-- Nuevo botón -->
+        <div class="properties" id="properties">
+            <h2>Propiedades de los Espacios Métricos</h2><br>
+            <ol>
+                <li>No negatividad:d(x,y)≥0 (la distancia es siempre no negativa).</li><br>
+                <li>Identidad de los indiscernibles:d(x,y)=0⟺x=y (la distancia es cero si y solo si los puntos son los mismos).</li><br>
+                <li>Simetría:d(x,y)=d(y,x) (la distancia de x a y es la misma que de y a x)</li><br>
+                <li>Desigualdad triangular:d(x,z)≤d(x,y)+d(y,z) (la distancia directa entre dos puntos es menor o igual que la distancia a través de un tercer punto)</li><br>
+                <li>Separabilidad:Un espacio métrico se dice separable si contiene un subconjunto denso que es contable.</li><br>
+                <li>Continuidad de la Métrica:La función de distancia 𝑑:𝑋×𝑋→𝑅 es una función continua respecto a la topología inducida por la métrica.</li><br>
+                <li>Compleción:Un espacio métrico se dice completo si toda sucesión de Cauchy converge en el espacio.</li><br>
+                <li>Unicidad de límites:Si una secuencia de puntos converge a dos límites distintos, entonces esos límites deben ser iguales.</li>
+            </ol>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        function mostrarPropiedades() {
+            var properties = document.getElementById('properties');
+            properties.style.display = 'block'; // Mostrar el elemento properties
+        }
+
+        // Obtener el lienzo y el contexto 2D
+        var canvas = document.getElementById('myCanvas');
+        var ctx = canvas.getContext('2d');
+
+        // Variables para almacenar los puntos ingresados por el usuario
+        var punto1 = null;
+        var punto2 = null;
+
+        // Función para dibujar un punto en el plano cartesiano
+        function dibujarPunto(x, y) {
+            ctx.beginPath();
+            ctx.arc(x, y, 3, 0, 2 * Math.PI);  // Tamaño reducido del punto
+            ctx.fillStyle = 'blue';
+            ctx.fill();
+        }
+
+        // Función para dibujar una línea entre dos puntos
+        function dibujarLinea(p1, p2) {
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.strokeStyle = 'green';
+            ctx.stroke();
+        }
+
+        // Función para calcular la distancia entre dos puntos
+        function calcularDistancia() {
+            if (punto1 && punto2) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                dibujarPunto(punto1.x, punto1.y);
+                dibujarPunto(punto2.x, punto2.y);
+                dibujarLinea(punto1, punto2);
+                var distancia = Math.sqrt(Math.pow(punto2.x - punto1.x, 2) + Math.pow(punto2.y - punto1.y, 2));
+                mostrarDistancia(distancia.toFixed(2));
+            } else {
+                alert('Por favor, ingresa coordenadas válidas para ambos puntos.');
+            }
+        }
+
+        // Función para mostrar la distancia en el lienzo
+        function mostrarDistancia(distancia) {
+            var x = (punto1.x + punto2.x) / 2;
+            var y = (punto1.y + punto2.y) / 2;
+            ctx.font = "20px Arial";
+            ctx.fillStyle = "black";
+            ctx.fillText("Distancia: " + distancia, x, y - 10);
+        }
+        // Manejar el evento del clic izquierdo del mouse en el lienzo
+        canvas.addEventListener('click', function(event) {
+            var rect = canvas.getBoundingClientRect();
+            var mouseX = Math.round(event.clientX - rect.left); // Redondear las coordenadas
+            var mouseY = Math.round(event.clientY - rect.top);  // Redondear las coordenadas
+            
+            if (!punto1) {
+                punto1 = { x: mouseX, y: mouseY };
+                dibujarPunto(mouseX, mouseY);
+                document.getElementById('punto1').value = mouseX + ', ' + mouseY;
+            } else if (!punto2) {
+                punto2 = { x: mouseX, y: mouseY };
+                dibujarPunto(mouseX, mouseY);
+                document.getElementById('punto2').value = mouseX + ', ' + mouseY;
+            }
+        });
+
+    </script>
+</body>
+</html>

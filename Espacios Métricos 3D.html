@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Representación 3D de Espacios Métricos</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        #container {
+            text-align: center;
+        }
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h1>Representación 3D de Espacios Métricos</h1>
+        <canvas id="myCanvas" width="500" height="500"></canvas>
+        <div>
+            <label for="coordenadas">Coordenadas Punto 1 (x, y, z):</label>
+            <input type="text" id="punto1" placeholder="x1, y1, z1">
+            <br>
+            <label for="coordenadas">Coordenadas Punto 2 (x, y, z):</label>
+            <input type="text" id="punto2" placeholder="x2, y2, z2">
+        </div>
+        <button onclick="calcularDistancia()">Calcular Distancia</button>
+    </div>
+
+    <script>
+        // Obtener el lienzo y el contexto 2D
+        var canvas = document.getElementById('myCanvas');
+        var ctx = canvas.getContext('2d');
+
+        // Variables para almacenar los puntos ingresados por el usuario
+        var punto1 = null;
+        var punto2 = null;
+
+        // Función para dibujar un punto en el plano cartesiano
+        function dibujarPunto(x, y, z) {
+            if (x !== 0 || y !== 0) { // Verificar si las coordenadas son diferentes de (0,0)
+                ctx.beginPath();
+                ctx.arc(x, y, 5, 0, 2 * Math.PI);
+                ctx.fillStyle = 'blue';
+                ctx.fill();
+            }
+        }
+
+        // Función para dibujar una línea entre dos puntos
+        function dibujarLinea(p1, p2) {
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.strokeStyle = 'green';
+            ctx.stroke();
+            // Mostrar la distancia encima de la línea verde si es mayor que 0
+            var distancia = Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+            if (distancia > 0) {
+                var x = (p1.x + p2.x) / 2;
+                var y = (p1.y + p2.y) / 2;
+                ctx.fillStyle = 'black';
+                ctx.fillText(distancia.toFixed(2), x, y - 5); // Ajusta la posición del texto
+            }
+        }
+
+        // Función para calcular la distancia entre dos puntos en 3D
+        function calcularDistancia() {
+            if (punto1 && punto2) {
+                // Calcular la distancia en 3D
+                var distancia = Math.sqrt(Math.pow(punto2.x - punto1.x, 2) + Math.pow(punto2.y - punto1.y, 2) + Math.pow(punto2.z - punto1.z, 2));
+                
+                // Dibujar la línea diagonal en 3D
+                dibujarLinea(punto1, punto2);
+                dibujarLinea(punto1, {x: punto1.x, y: punto1.y, z: punto2.z}); // Línea en la dimensión Z
+                dibujarLinea(punto2, {x: punto2.x, y: punto2.y, z: punto2.z}); // Línea en la dimensión Z
+
+                // alert('La distancia entre los dos puntos en 3D es: ' + distancia.toFixed(2));
+            } else {
+                alert('Por favor, ingresa coordenadas válidas para ambos puntos.');
+            }
+        }
+
+        // Manejar el evento del clic izquierdo del mouse en el lienzo
+        canvas.addEventListener('click', function(event) {
+            var rect = canvas.getBoundingClientRect();
+            var mouseX = event.clientX - rect.left;
+            var mouseY = event.clientY - rect.top;
+            
+            if (!punto1) {
+                punto1 = { x: mouseX, y: mouseY, z: parseInt(prompt("Ingrese la coordenada Z para el punto 1")) || 0 }; // Z-coordinate será 0 si no se ingresa
+                dibujarPunto(mouseX, mouseY, punto1.z); // Pasa la coordenada z
+                document.getElementById('punto1').value = mouseX + ', ' + mouseY + ', ' + punto1.z;
+            } else if (!punto2) {
+                punto2 = { x: mouseX, y: mouseY, z: parseInt(prompt("Ingrese la coordenada Z para el punto 2")) || 0 }; // Z-coordinate será 0 si no se ingresa
+                dibujarPunto(mouseX, mouseY, punto2.z); // Pasa la coordenada z
+                document.getElementById('punto2').value = mouseX + ', ' + mouseY + ', ' + punto2.z;
+            }
+        });
+    </script>
+</body>
+</html>
